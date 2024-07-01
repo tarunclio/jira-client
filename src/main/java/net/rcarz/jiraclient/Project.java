@@ -22,9 +22,8 @@ package net.rcarz.jiraclient;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * Represents a JIRA project.
@@ -56,17 +55,17 @@ public class Project extends Resource {
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
         self = Field.getString(map.get("self"));
         id = Field.getString(map.get("id"));
         avatarUrls = Field.getMap(String.class, String.class, map.get("avatarUrls"));
         key = Field.getString(map.get("key"));
         name = Field.getString(map.get("name"));
-        description = Field.getString(map.get("description"));
-        lead = Field.getResource(User.class, map.get("lead"), restclient);
-        assigneeType = Field.getString(map.get("assigneeType"));
-        components = Field.getResourceArray(Component.class, map.get("components"), restclient);
+        description = json.optString("description","");
+        lead = Field.getResource(User.class,json.optJSONObject("lead",new JSONObject("{}")), restclient);
+        assigneeType = json.optString("assigneeType","");
+        components = Field.getResourceArray(Component.class, json.optJSONArray("components", new JSONArray()), restclient);
         issueTypes = Field.getResourceArray(
             IssueType.class,
             map.containsKey("issueTypes") ? map.get("issueTypes") : map.get("issuetypes"),
@@ -88,7 +87,7 @@ public class Project extends Resource {
     public static Project get(RestClient restclient, String key)
         throws JiraException {
 
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             result = restclient.get(getBaseUri() + "project/" + key);
@@ -112,7 +111,7 @@ public class Project extends Resource {
      * @throws JiraException when the retrieval fails
      */
     public static List<Project> getAll(RestClient restclient) throws JiraException {
-        JSON result = null;
+        Object result = null;
 
         try {
             result = restclient.get(getBaseUri() + "project");
@@ -120,7 +119,7 @@ public class Project extends Resource {
             throw new JiraException("Failed to retrieve projects", ex);
         }
 
-        if (!(result instanceof JSONArray))
+        if (!(result instanceof JSONArray) || !(result instanceof JSONObject))
             throw new JiraException("JSON payload is malformed");
 
         return Field.getResourceArray(Project.class, result, restclient);

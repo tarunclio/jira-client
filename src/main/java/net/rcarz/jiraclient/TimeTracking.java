@@ -21,7 +21,7 @@ package net.rcarz.jiraclient;
 
 import java.util.Map;
 
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
 
 /**
  * Represents issue time tracking data.
@@ -41,14 +41,13 @@ public class TimeTracking {
      * @param json JSON payload
      */
     protected TimeTracking(JSONObject json) {
-        Map<?, ?> map = json;
-
-        originalEstimate = Field.getString(map.get("originalEstimate"));
-        remainingEstimate = Field.getString(map.get("remainingEstimate"));
-        timeSpent = Field.getString(map.get("timeSpent"));
-        originalEstimateSeconds = Field.getInteger(map.get("originalEstimateSeconds"));
-        remainingEstimateSeconds = Field.getInteger(map.get("remainingEstimateSeconds"));
-        timeSpentSeconds = Field.getInteger(map.get("timeSpentSeconds"));
+        Map map = json.toMap();
+        originalEstimate = json.optString("originalEstimate","");
+        remainingEstimate = json.optString("remainingEstimate","");
+        timeSpent = json.optString("timeSpent","");
+        originalEstimateSeconds = json.optInt("originalEstimateSeconds",0);
+        remainingEstimateSeconds = json.optInt("remainingEstimateSeconds");
+        timeSpentSeconds =json.optInt("timeSpentSeconds");
     }
 
     public TimeTracking() {

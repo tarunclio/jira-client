@@ -25,8 +25,8 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.Map;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -58,7 +58,7 @@ public class Attachment extends Resource {
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
         self = Field.getString(map.get("self"));
         id = Field.getString(map.get("id"));
@@ -83,7 +83,7 @@ public class Attachment extends Resource {
     public static Attachment get(RestClient restclient, String id)
         throws JiraException {
 
-        JSON result = null;
+   /*    String  result = null;
 
         try {
             result = restclient.get(getBaseUri() + "attachment/" + id);
@@ -95,6 +95,20 @@ public class Attachment extends Resource {
             throw new JiraException("JSON payload is malformed");
 
         return new Attachment(restclient, (JSONObject)result);
+        */
+
+         JSONObject result = null;
+
+        try {
+            String jsonResponse = restclient.get(getBaseUri() + "attachment/" + id).toString();
+            result = new JSONObject(jsonResponse);
+        } catch (JSONException ex) {
+            throw new JiraException("JSON payload is malformed", ex);
+        } catch (Exception ex) {
+            throw new JiraException("Failed to retrieve attachment " + id, ex);
+        }
+
+        return new Attachment(restclient, result);
     }
     
     /**

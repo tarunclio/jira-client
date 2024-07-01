@@ -21,8 +21,7 @@ package net.rcarz.jiraclient;
 
 import java.util.Map;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
 
 /**
  * Represents an issue status.
@@ -47,7 +46,7 @@ public class Status extends Resource {
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
         self = Field.getString(map.get("self"));
         id = Field.getString(map.get("id"));
@@ -69,7 +68,7 @@ public class Status extends Resource {
     public static Status get(RestClient restclient, String id)
         throws JiraException {
 
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             result = restclient.get(getBaseUri() + "status/" + id);

@@ -21,7 +21,7 @@ package net.rcarz.jiraclient;
 
 import java.util.Map;
 
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
 
 /**
  * Item in a {@link ChangeLogEntry}.
@@ -75,7 +75,7 @@ public class ChangeLogItem extends Resource {
      * @param json the json payload
      */
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
         field = Field.getString(map.get("field"));
         fieldType = Field.getString(map.get("fieldtype"));

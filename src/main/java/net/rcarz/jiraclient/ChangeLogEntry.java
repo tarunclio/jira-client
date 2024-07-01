@@ -23,7 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
 
 /**
  * Contains information about an issue change log entry. Change log entries are
@@ -65,7 +65,7 @@ public class ChangeLogEntry extends Resource {
      * @param json the json payload
      */
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
         id = Field.getString(map.get("id"));
         author = Field.getResource(User.class, map.get("author"), restclient);

@@ -11,6 +11,10 @@ public class TimeTrackingTest {
 
     @Test
     public void testAttributeMappings() {
+    	System.out.println("IN TimeTrackingTest");
+    	System.out.println(this.issue);
+
+    	System.out.println(this.time);
         assertEquals("1w", time.getOriginalEstimate());
         assertEquals(144000, time.getOriginalEstimateSeconds());
 

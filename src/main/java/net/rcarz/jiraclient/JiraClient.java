@@ -23,9 +23,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import org.apache.http.impl.client.DefaultHttpClient;
 
@@ -271,11 +271,11 @@ public class JiraClient {
     public List<Priority> getPriorities() throws JiraException {
         try {
             URI uri = restclient.buildURI(Resource.getBaseUri() + "priority");
-            JSON response = restclient.get(uri);
-            JSONArray prioritiesArray = JSONArray.fromObject(response);
-
-            List<Priority> priorities = new ArrayList<Priority>(prioritiesArray.size());
-            for (int i = 0; i < prioritiesArray.size(); i++) {
+            JSONObject response = restclient.get(uri);
+       //    TODO UNTESTED JSONArray prioritiesArray = JSONArray.fromObject(response);
+            JSONArray prioritiesArray = response.names();
+            List<Priority> priorities = new ArrayList<Priority>(prioritiesArray.length());
+            for (int i = 0; i < prioritiesArray.length(); i++) {
                 JSONObject p = prioritiesArray.getJSONObject(i);
                 priorities.add(new Priority(restclient, p));
             }
@@ -346,11 +346,12 @@ public class JiraClient {
     public List<Project> getProjects() throws JiraException {
         try {
             URI uri = restclient.buildURI(Resource.getBaseUri() + "project");
-            JSON response = restclient.get(uri);
-            JSONArray projectsArray = JSONArray.fromObject(response);
-
-            List<Project> projects = new ArrayList<Project>(projectsArray.size());
-            for (int i = 0; i < projectsArray.size(); i++) {
+            JSONObject response = restclient.get(uri);
+          //  JSONArray projectsArray = JSONArray.fromObject(response);
+            //    TODO UNTESTED JSONArray prioritiesArray = JSONArray.fromObject(response);
+            JSONArray projectsArray = response.names();
+            List<Project> projects = new ArrayList<Project>(projectsArray.length());
+            for (int i = 0; i < projectsArray.length(); i++) {
                 JSONObject p = projectsArray.getJSONObject(i);
                 projects.add(new Project(restclient, p));
             }
@@ -370,7 +371,7 @@ public class JiraClient {
     public Project getProject(String key) throws JiraException {
         try {
             URI uri = restclient.buildURI(Resource.getBaseUri() + "project/" + key);
-            JSON response = restclient.get(uri);
+            JSONObject response = restclient.get(uri);
             return new Project(restclient, (JSONObject) response);
         } catch (Exception ex) {
             throw new JiraException(ex.getMessage(), ex);
@@ -385,11 +386,12 @@ public class JiraClient {
     public List<IssueType> getIssueTypes() throws JiraException {
         try {
             URI uri = restclient.buildURI(Resource.getBaseUri() + "issuetype");
-            JSON response = restclient.get(uri);
-            JSONArray issueTypeArray = JSONArray.fromObject(response);
-
-            List<IssueType> issueTypes = new ArrayList<IssueType>(issueTypeArray.size());
-            for (int i = 0; i < issueTypeArray.size(); i++) {
+            JSONObject response = restclient.get(uri);
+         //   JSONArray issueTypeArray = JSONArray.fromObject(response);
+            //    TODO UNTESTED JSONArray prioritiesArray = JSONArray.fromObject(response);
+            JSONArray issueTypeArray = response.names();
+            List<IssueType> issueTypes = new ArrayList<IssueType>(issueTypeArray.length());
+            for (int i = 0; i < issueTypeArray.length(); i++) {
                 JSONObject it = issueTypeArray.getJSONObject(i);
                 issueTypes.add(new IssueType(restclient, it));
             }

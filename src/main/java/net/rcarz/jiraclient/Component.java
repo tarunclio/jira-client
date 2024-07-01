@@ -23,8 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.rcarz.jiraclient.Issue.FluentCreate;
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
 
 /**
  * Represents an issue component.
@@ -113,7 +112,7 @@ public class Component extends Resource {
          * @throws JiraException when the create fails
          */
         public Component execute() throws JiraException {
-            JSON result = null;
+            JSONObject result = null;
 
             try {
                 result = restclient.post(getRestUri(null), req);
@@ -121,12 +120,12 @@ public class Component extends Resource {
                 throw new JiraException("Failed to create issue", ex);
             }
 
-            if (!(result instanceof JSONObject) || !((JSONObject) result).containsKey("id")
+            if (!(result instanceof JSONObject) || !((JSONObject) result).has("id")
                     || !(((JSONObject) result).get("id") instanceof String)) {
                 throw new JiraException("Unexpected result on create component");
             }
 
-            return new Component(restclient, (JSONObject) result);
+            return new Component(restclient, result);
         }
     }
 
@@ -148,7 +147,7 @@ public class Component extends Resource {
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
         self = Field.getString(map.get("self"));
         id = Field.getString(map.get("id"));
@@ -170,7 +169,7 @@ public class Component extends Resource {
     public static Component get(RestClient restclient, String id)
         throws JiraException {
 
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             result = restclient.get(getRestUri(id));

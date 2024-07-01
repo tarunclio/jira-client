@@ -19,8 +19,8 @@
 
 package net.rcarz.jiraclient;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +45,7 @@ public class User extends Resource {
     protected User(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
 
@@ -60,13 +60,14 @@ public class User extends Resource {
     public static User get(RestClient restclient, String username)
             throws JiraException {
 
-        JSON result = null;
+            
+        JSONObject result = null;
 
         Map<String, String> params = new HashMap<String, String>();
         params.put("username", username);
 
         try {
-            result = restclient.get(getBaseUri() + "user", params);
+            result = new JSONObject( restclient.get(getBaseUri() + "user", params));
         } catch (Exception ex) {
             throw new JiraException("Failed to retrieve user " + username, ex);
         }
@@ -78,15 +79,15 @@ public class User extends Resource {
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        active = Field.getBoolean(map.get("active"));
-        avatarUrls = Field.getMap(String.class, String.class, map.get("avatarUrls"));
-        displayName = Field.getString(map.get("displayName"));
+        self = json.optString("self");
+        id = json.optString("id");
+        active = json.optBoolean("active");
+        avatarUrls = Field.getMap(String.class, String.class, json.optJSONObject("avatarUrls"));
+        displayName = json.optString("displayName");
         email = getEmailFromMap(map);
-        name = Field.getString(map.get("name"));
+        name = json.optString(("name"));
     }
 
     /**

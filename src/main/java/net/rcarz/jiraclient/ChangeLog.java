@@ -23,7 +23,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * Issue change log.
@@ -43,7 +44,7 @@ public class ChangeLog extends Resource {
     protected ChangeLog(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
 
@@ -52,10 +53,10 @@ public class ChangeLog extends Resource {
      * @param json the json payload
      */
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
-        entries = Field.getResourceArray(ChangeLogEntry.class, map.get(
-                Field.CHANGE_LOG_ENTRIES), restclient);
+        entries = Field.getResourceArray(ChangeLogEntry.class, json.optJSONArray(
+                Field.CHANGE_LOG_ENTRIES,new JSONArray()), restclient);
     }
 
     /**

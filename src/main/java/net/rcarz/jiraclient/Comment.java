@@ -22,8 +22,8 @@ package net.rcarz.jiraclient;
 import java.util.Date;
 import java.util.Map;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Represents an issue comment.
@@ -50,15 +50,17 @@ public class Comment extends Resource {
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json;
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        author = Field.getResource(User.class, map.get("author"), restclient);
-        body = Field.getString(map.get("body"));
-        created = Field.getDate(map.get("created"));
-        updated = Field.getDate(map.get("updated"));
-        updatedAuthor = Field.getResource(User.class, map.get("updatedAuthor"), restclient);
+      //  Map map = json.toMap();
+    //	System.out.println("COMMENTS OBJ "+json.toString(2));
+        self = Field.getString(json.optString("self",""));
+        id = Field.getString(json.optString("id",""));
+
+        author = Field.getResource(User.class, json.getJSONObject("author"), restclient);
+        body = Field.getString(json.optString("body",""));
+        created = Field.getDate(json.optString("created" ,""));
+        updated = Field.getDate(json.optString("updated",""));
+        updatedAuthor = Field.getResource(User.class, json.optString("updatedAuthor",""), restclient);
     }
 
     /**
@@ -75,7 +77,7 @@ public class Comment extends Resource {
     public static Comment get(RestClient restclient, String issue, String id)
         throws JiraException {
 
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             result = restclient.get(getBaseUri() + "issue/" + issue + "/comment/" + id);

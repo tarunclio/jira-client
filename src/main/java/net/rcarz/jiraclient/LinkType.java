@@ -21,8 +21,7 @@ package net.rcarz.jiraclient;
 
 import java.util.Map;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
 
 /**
  * Represents an issue link type.
@@ -42,18 +41,18 @@ public class LinkType extends Resource {
     protected LinkType(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && ! json.isEmpty())
             deserialise(json);
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        name = Field.getString(map.get("name"));
-        inward = Field.getString(map.get("inward"));
-        outward = Field.getString(map.get("outward"));
+        self = json.optString(("self"));
+        id = json.optString(("id"));
+        name = json.optString(("name"));
+        inward = json.optString(("inward"));
+        outward = json.optString(("outward"));
     }
 
     /**
@@ -69,7 +68,7 @@ public class LinkType extends Resource {
     public static LinkType get(RestClient restclient, String id)
         throws JiraException {
 
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             result = restclient.get(getBaseUri() + "issueLinkType/" + id);

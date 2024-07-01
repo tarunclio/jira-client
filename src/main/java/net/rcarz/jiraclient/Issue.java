@@ -27,9 +27,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * Represents a JIRA issue.
@@ -108,7 +108,7 @@ public class Issue extends Resource {
             JSONObject req = new JSONObject();
             req.put("fields", fieldmap);
 
-            JSON result = null;
+            JSONObject result = null;
 
             try {
                 result = restclient.post(getRestUri(null), req);
@@ -116,7 +116,7 @@ public class Issue extends Resource {
                 throw new JiraException("Failed to create issue", ex);
             }
 
-            if (!(result instanceof JSONObject) || !((JSONObject) result).containsKey("key")
+            if (!(result instanceof JSONObject) || !((JSONObject) result).has("key")
                     || !(((JSONObject) result).get("key") instanceof String)) {
                 throw new JiraException("Unexpected result on create issue");
             }
@@ -179,10 +179,10 @@ public class Issue extends Resource {
 
             JSONObject req = new JSONObject();
 
-            if (fieldmap.size() > 0)
+            if (fieldmap.length() > 0)
                 req.put("fields", fieldmap);
 
-            if (updatemap.size() > 0)
+            if (updatemap.length() > 0)
                 req.put("update", updatemap);
 
             try {
@@ -254,7 +254,7 @@ public class Issue extends Resource {
             JSONObject result = null;
 
             for (Object item : transitions) {
-                if (!(item instanceof JSONObject) || !((JSONObject)item).containsKey("id"))
+                if (!(item instanceof JSONObject) || !((JSONObject)item).has("id"))
                     throw new JiraException("Transition metadata is malformed");
 
                 JSONObject t = (JSONObject)item;
@@ -275,7 +275,7 @@ public class Issue extends Resource {
 
         private void realExecute(JSONObject trans) throws JiraException {
 
-            if (trans.isNullObject() || !trans.containsKey("fields") ||
+            if (trans == null  || !trans.has("fields") ||
                     !(trans.get("fields") instanceof JSONObject))
                 throw new JiraException("Transition metadata is missing fields");
 
@@ -289,7 +289,7 @@ public class Issue extends Resource {
 
             JSONObject req = new JSONObject();
 
-            if (fieldmap.size() > 0)
+            if (fieldmap.length() > 0)
                 req.put("fields", fieldmap);
 
             JSONObject t = new JSONObject();
@@ -391,46 +391,54 @@ public class Issue extends Resource {
     protected Issue(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json;
+        Map map = json.toMap();
 
         id = Field.getString(map.get("id"));
         self = Field.getString(map.get("self"));
         key = Field.getString(map.get("key"));
 
         fields = (Map)map.get("fields");
+//        System.out.println("JSON FIELDS"+json.names());
+//        System.out.println("FIELDS MAP"+fields);
+         JSONObject fieldsJson = json.getJSONObject("fields");
 
-        assignee = Field.getResource(User.class, fields.get(Field.ASSIGNEE), restclient);
-        attachments = Field.getResourceArray(Attachment.class, fields.get(Field.ATTACHMENT), restclient);
-        changeLog = Field.getResource(ChangeLog.class, map.get(Field.CHANGE_LOG), restclient);
-        comments = Field.getComments(fields.get(Field.COMMENT), restclient);
-        components = Field.getResourceArray(Component.class, fields.get(Field.COMPONENTS), restclient);
-        description = Field.getString(fields.get(Field.DESCRIPTION));
-        dueDate = Field.getDate(fields.get(Field.DUE_DATE));
-        fixVersions = Field.getResourceArray(Version.class, fields.get(Field.FIX_VERSIONS), restclient);
-        issueLinks = Field.getResourceArray(IssueLink.class, fields.get(Field.ISSUE_LINKS), restclient);
-        issueType = Field.getResource(IssueType.class, fields.get(Field.ISSUE_TYPE), restclient);
-        labels = Field.getStringArray(fields.get(Field.LABELS));
-        parent = Field.getResource(Issue.class, fields.get(Field.PARENT), restclient);
-        priority = Field.getResource(Priority.class, fields.get(Field.PRIORITY), restclient);
-        project = Field.getResource(Project.class, fields.get(Field.PROJECT), restclient);
-        reporter = Field.getResource(User.class, fields.get(Field.REPORTER), restclient);
-        resolution = Field.getResource(Resolution.class, fields.get(Field.RESOLUTION), restclient);
-        resolutionDate = Field.getDate(fields.get(Field.RESOLUTION_DATE));
-        status = Field.getResource(Status.class, fields.get(Field.STATUS), restclient);
-        subtasks = Field.getResourceArray(Issue.class, fields.get(Field.SUBTASKS), restclient);
-        summary = Field.getString(fields.get(Field.SUMMARY));
-        timeTracking = Field.getTimeTracking(fields.get(Field.TIME_TRACKING));
-        versions = Field.getResourceArray(Version.class, fields.get(Field.VERSIONS), restclient);
-        votes = Field.getResource(Votes.class, fields.get(Field.VOTES), restclient);
-        watches = Field.getResource(Watches.class, fields.get(Field.WATCHES), restclient);
-        workLogs = Field.getWorkLogs(fields.get(Field.WORKLOG), restclient);
-        timeEstimate = Field.getInteger(fields.get(Field.TIME_ESTIMATE));
-        timeSpent = Field.getInteger(fields.get(Field.TIME_SPENT));
+        assignee = Field.getResource(User.class, fieldsJson.get(Field.ASSIGNEE), restclient);
+        attachments = Field.getResourceArray(Attachment.class, fieldsJson.optJSONArray(Field.ATTACHMENT,new JSONArray()), restclient);
+        comments = Field.getComments(fieldsJson.optJSONObject(Field.COMMENT), restclient);
+        components = Field.getResourceArray(Component.class, fieldsJson.get(Field.COMPONENTS), restclient);
+        description = Field.getString(fieldsJson.optString(Field.DESCRIPTION,""));
+        dueDate = Field.getDate(fieldsJson.optString(Field.DUE_DATE,""));
+        fixVersions = Field.getResourceArray(Version.class, fieldsJson.getJSONArray(Field.FIX_VERSIONS), restclient);
+        issueLinks = Field.getResourceArray(IssueLink.class, fieldsJson.getJSONArray(Field.ISSUE_LINKS), restclient);
+        issueType = Field.getResource(IssueType.class, fieldsJson.optJSONObject(Field.ISSUE_TYPE), restclient);
+        labels = Field.getStringArray(fieldsJson.getJSONArray(Field.LABELS));
+       // parent = Field.getResource(Issue.class, fieldsJson.optJSONObject(Field.PARENT), restclient);
+        parent = Field.getResource(Issue.class, fieldsJson.optJSONObject(Field.PARENT,new JSONObject("{}")), restclient);
+        priority = Field.getResource(Priority.class, fieldsJson.optJSONObject(Field.PRIORITY), restclient);
+        project = Field.getResource(Project.class, fieldsJson.getJSONObject(Field.PROJECT), restclient);
+        reporter = Field.getResource(User.class, fieldsJson.optJSONObject(Field.REPORTER), restclient);
+        resolution = Field.getResource(Resolution.class, fieldsJson.optJSONObject(Field.RESOLUTION,new JSONObject("{}")), restclient);
+        resolutionDate = Field.getDate(fieldsJson.optString(Field.RESOLUTION_DATE,""));
+        status = Field.getResource(Status.class, fieldsJson.getJSONObject(Field.STATUS), restclient);
+        subtasks = Field.getResourceArray(Issue.class, fieldsJson.getJSONArray(Field.SUBTASKS), restclient);
+        summary = Field.getString(fieldsJson.optString(Field.SUMMARY,""));
+        timeTracking = Field.getTimeTracking(fieldsJson.getJSONObject(Field.TIME_TRACKING));
+
+        versions = Field.getResourceArray(Version.class, fieldsJson.getJSONArray(Field.VERSIONS), restclient);
+        votes = Field.getResource(Votes.class, fieldsJson.getJSONObject(Field.VOTES), restclient);
+        watches = Field.getResource(Watches.class, fieldsJson.getJSONObject(Field.WATCHES), restclient);
+        workLogs = Field.getWorkLogs(fieldsJson.optJSONArray(Field.WORKLOG,new JSONArray()), restclient);
+//        timeEstimate = Field.getInteger(fields.get(Field.TIME_ESTIMATE));
+//        timeSpent = Field.getInteger(fields.get(Field.TIME_SPENT));
+        timeEstimate = fieldsJson.optInt(Field.TIME_ESTIMATE,0);
+        timeSpent = fieldsJson.optInt(Field.TIME_SPENT,0);
+        changeLog = Field.getResource(ChangeLog.class, fieldsJson.optJSONObject(Field.CHANGE_LOG, new JSONObject("{}")), restclient);
+
     }
 
     private static String getRestUri(String key) {
@@ -442,7 +450,7 @@ public class Issue extends Resource {
 
         final String pval = project;
         final String itval = issueType;
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             URI createuri = restclient.buildURI(
@@ -462,7 +470,7 @@ public class Issue extends Resource {
 
         JSONObject jo = (JSONObject)result;
 
-        if (jo.isNullObject() || !jo.containsKey("projects") ||
+        if (jo == null|| !jo.has("projects") ||
                 !(jo.get("projects") instanceof JSONArray))
             throw new JiraException("Create metadata is malformed");
 
@@ -479,7 +487,7 @@ public class Issue extends Resource {
     }
 
     private JSONObject getEditMetadata() throws JiraException {
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             result = restclient.get(getRestUri(key) + "/editmeta");
@@ -492,7 +500,7 @@ public class Issue extends Resource {
 
         JSONObject jo = (JSONObject)result;
 
-        if (jo.isNullObject() || !jo.containsKey("fields") ||
+        if (jo == null || !jo.has("fields") ||
                 !(jo.get("fields") instanceof JSONObject))
             throw new JiraException("Edit metadata is malformed");
 
@@ -500,7 +508,7 @@ public class Issue extends Resource {
     }
 
     private JSONArray getTransitions() throws JiraException {
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             URI transuri = restclient.buildURI(
@@ -515,7 +523,7 @@ public class Issue extends Resource {
 
         JSONObject jo = (JSONObject)result;
 
-        if (jo.isNullObject() || !jo.containsKey("transitions") ||
+        if ((jo == null) || !jo.has("transitions") ||
                 !(jo.get("transitions") instanceof JSONArray))
             throw new JiraException("Transition metadata is missing from jos");
 
@@ -691,7 +699,7 @@ public class Issue extends Resource {
     private static JSONObject realGet(RestClient restclient, String key, Map<String, String> queryParams)
             throws JiraException {
 
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             URI uri = restclient.buildURI(getBaseUri() + "issue/" + key, queryParams);
@@ -871,7 +879,7 @@ public class Issue extends Resource {
                     throws JiraException {
 
         final String j = jql;
-        JSON result = null;
+        JSONObject result = null;
 
         try {
             Map<String, String> queryParams = new HashMap<String, String>() {
@@ -1166,7 +1174,8 @@ public class Issue extends Resource {
         JSONObject obj;
         try {
             URI uri = restclient.buildURI(getRestUri(key) + "/worklog");
-            JSON json = restclient.get(uri);
+           
+            JSONObject json = restclient.get(uri);
             obj = (JSONObject) json;
         } catch (Exception ex) {
             throw new JiraException("Failed to get worklog for issue "

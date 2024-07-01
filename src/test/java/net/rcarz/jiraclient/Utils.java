@@ -1,12 +1,14 @@
 package net.rcarz.jiraclient;
 
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 public class Utils {
 
     public static JSONObject getTestIssue() {
-        JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON("{\n" +
+    	JSONObject jsonObject = null;
+    	try {
+         jsonObject = new JSONObject("{\n" +
         "  \"expand\": \"renderedFields,names,schema,transitions,operations,editmeta,changelog\",\n" +
         "  \"id\": \"10742\",\n" +
         "  \"self\": \"https://brainbubble.atlassian.net/rest/api/latest/issue/10742\",\n" +
@@ -114,7 +116,7 @@ public class Utils {
         "    ],\n" +
         "    \"customfield_10005\": null,\n" +
         "    \"workratio\": -1,\n" +
-        "    \"assignee\": null,\n" +
+        "    \"assignee\": \"johndoe\" ,\n" +
         "    \"attachment\": [\n" +
         "      \n" +
         "    ],\n" +
@@ -198,7 +200,9 @@ public class Utils {
         "    \"aggregatetimespent\": null\n" +
         "  }\n" +
         "}");
-
+    	} catch (JSONException e) {
+    	    e.printStackTrace(); // Handle the exception appropriately
+    	}
         return jsonObject;
     }
 }
