@@ -41,17 +41,17 @@ public class Watches extends Resource {
     protected Watches(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json.toMap();
+        
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        watchCount = Field.getInteger(map.get("watchCount"));
-        isWatching = Field.getBoolean(map.get("isWatching"));
+        self = json.optString("self");
+        id = json.optString("id");
+        watchCount = json.optInt("watchCount");
+        isWatching = json.optBoolean("isWatching");
     }
 
     /**

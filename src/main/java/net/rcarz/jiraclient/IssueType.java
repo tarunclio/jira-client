@@ -43,22 +43,22 @@ public class IssueType extends Resource {
     protected IssueType(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
 
     private void deserialise(JSONObject json) {
         Map map = json.toMap();
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        description = Field.getString(map.get("description"));
-        iconUrl = Field.getString(map.get("iconUrl"));
-        name = Field.getString(map.get("name"));
-        subtask = Field.getBoolean(map.get("subtask"));
+        self = json.optString("self");
+        id = json.optString("id");
+        description = json.optString("description");
+        iconUrl = json.optString("iconUrl");
+        name =json.optString("name");
+        subtask = json.optBoolean("subtask");
 
-        if (map.containsKey("fields") && map.get("fields") instanceof JSONObject)
-            fields = (JSONObject)map.get("fields");
+        if (json.has("fields") )
+            fields = json.getJSONObject("fields");
     }
 
     /**

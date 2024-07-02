@@ -41,17 +41,17 @@ public class Votes extends Resource {
     protected Votes(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json.toMap();
+        
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        votes = Field.getInteger(map.get("votes"));
-        hasVoted = Field.getBoolean(map.get("hasVoted"));
+        self = json.optString("self");
+        id = json.optString("id");
+        votes = json.optInt("votes");
+        hasVoted = json.optBoolean("hasVoted");
     }
 
     /**

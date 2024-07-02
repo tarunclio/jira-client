@@ -47,23 +47,23 @@ public class WorkLog extends Resource {
     protected WorkLog(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json.toMap();
+        
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        author = Field.getResource(User.class, map.get("author"), restclient);
-        comment = Field.getString(map.get("comment"));
-        created = Field.getDate(map.get("created"));
-        updated = Field.getDate(map.get("updated"));
-        updatedAuthor = Field.getResource(User.class, map.get("updatedAuthor"), restclient);
-        started = Field.getDate(map.get("started"));
-        timeSpent = Field.getString(map.get("timeSpent"));
-        timeSpentSeconds = Field.getInteger(map.get("timeSpentSeconds"));
+        self = json.optString("self");
+        id = json.optString("id");
+        author = Field.getResource(User.class, json.optJSONObject("author",new JSONObject("{}")), restclient);
+        comment = json.optString("comment");
+        created = Field.getDate(json.optString("created"));
+        updated = Field.getDate(json.optString("updated"));
+        updatedAuthor = Field.getResource(User.class, json.optJSONObject("updatedAuthor",new JSONObject("{}")), restclient);
+        started = Field.getDate(json.optString("started"));
+        timeSpent = json.optString("timeSpent");
+        timeSpentSeconds =json.optInt("timeSpentSeconds");
     }
 
     /**

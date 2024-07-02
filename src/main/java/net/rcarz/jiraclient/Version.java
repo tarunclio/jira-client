@@ -43,7 +43,7 @@ public class Version extends Resource {
     protected Version(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
     
@@ -121,13 +121,13 @@ public class Version extends Resource {
     private void deserialise(JSONObject json) {
         Map map = json.toMap();
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        name = Field.getString(map.get("name"));
-        archived = Field.getBoolean(map.get("archived"));
-        released = Field.getBoolean(map.get("released"));
-        releaseDate = Field.getString(map.get("releaseDate"));
-        description = Field.getString(map.get("description"));
+        self = json.optString("self");
+        id = json.optString("id");
+        name = json.optString("name");
+        archived = json.optBoolean("archived");
+        released = json.optBoolean("released");
+        releaseDate = json.optString("releaseDate");
+        description = json.optString("description");
     }
 
     @Override
