@@ -1,0 +1,176 @@
+ {
+  "expand": "renderedFields,names,schema,transitions,operations,editmeta,changelog",
+  "self": "https://brainbubble.atlassian.net/rest/api/latest/issue/10742",
+  "id": "10742",
+  "fields": {
+    "issuetype": {
+      "name": "Story",
+      "self": "https://brainbubble.atlassian.net/rest/api/2/issuetype/7",
+      "description": "This is a test issue type.",
+      "id": "7",
+      "iconUrl": "https://brainbubble.atlassian.net/images/icons/issuetypes/story.png",
+      "subtask": false
+    },
+    "components": [
+      {
+        "name": "Account Management",
+        "self": "https://brainbubble.atlassian.net/rest/api/2/component/10303",
+        "id": "10303"
+      },
+      {
+        "name": "User Management",
+        "self": "https://brainbubble.atlassian.net/rest/api/2/component/10301",
+        "id": "10301"
+      }
+    ],
+    "timespent": 86400,
+    "timeoriginalestimate": null,
+    "description": "{panel:title=Description|borderStyle=dashed|borderColor=#ccc|titleBGColor=#F7D6C1|bgColor=#FFFFCE}\r\nAs a company / admin\r\n\r\nI want to update the company details like contact details / name and so on\r\n\r\nSo that their details are up to date\r\n{panel}\r\n\r\n{panel:title=Acceptance Criteria|borderStyle=dashed|borderColor=#ccc|titleBGColor=#F7D6C1|bgColor=#FFFFCE}\r\nCan I change the company name?\r\nCan I change our emails, addresses and phone number etc?\r\nCan I change my invoicing details?\r\nCan I change our application service agreement?\r\n{panel}",
+    "project": {
+      "avatarUrls": {
+        "48x48": "https://brainbubble.atlassian.net/secure/projectavatar?pid=10501&avatarId=10307",
+        "24x24": "https://brainbubble.atlassian.net/secure/projectavatar?size=small&pid=10501&avatarId=10307",
+        "16x16": "https://brainbubble.atlassian.net/secure/projectavatar?size=xsmall&pid=10501&avatarId=10307",
+        "32x32": "https://brainbubble.atlassian.net/secure/projectavatar?size=medium&pid=10501&avatarId=10307"
+      },
+      "name": "Filta",
+      "self": "https://brainbubble.atlassian.net/rest/api/2/project/10501",
+      "id": "10501",
+      "key": "FILTA"
+    },
+    "fixVersions": [{
+      "archived": false,
+      "releaseDate": "2013-12-01",
+      "name": "1.0",
+      "self": "https://brainbubble.atlassian.net/rest/api/2/version/10200",
+      "description": "First Full Functional Build",
+      "id": "10200",
+      "released": false
+    }],
+    "aggregatetimespent": null,
+    "resolution": null,
+    "timetracking": {
+      "originalEstimateSeconds": 144000,
+      "timeSpentSeconds": 86400,
+      "timeSpent": "3d",
+      "remainingEstimate": "2d",
+      "remainingEstimateSeconds": 57600,
+      "originalEstimate": "1w"
+    },
+    "customfield_10005": null,
+    "customfield_10006": "90",
+    "customfield_10007": null,
+    "attachment": [],
+    "aggregatetimeestimate": null,
+    "resolutiondate": null,
+    "workratio": -1,
+    "summary": "Maintain Company Details",
+    "watches": {
+      "self": "https://brainbubble.atlassian.net/rest/api/2/issue/FILTA-43/watchers",
+      "isWatching": false,
+      "watchCount": 0
+    },
+    "lastViewed": "2013-11-24T16:37:50.358+0000",
+    "subtasks": [],
+    "created": "2013-09-29T20:16:19.854+0100",
+    "reporter": {
+      "emailAddress": "joseph.b.mccarthy2012@googlemail.com",
+      "avatarUrls": {
+        "48x48": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=48",
+        "24x24": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=24",
+        "16x16": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=16",
+        "32x32": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=32"
+      },
+      "displayName": "Joseph McCarthy",
+      "name": "joseph",
+      "self": "https://brainbubble.atlassian.net/rest/api/2/user?username=joseph",
+      "active": true
+    },
+    "customfield_10000": null,
+    "aggregateprogress": {
+      "total": 0,
+      "progress": 0
+    },
+    "priority": {
+      "name": "Major",
+      "self": "https://brainbubble.atlassian.net/rest/api/2/priority/3",
+      "iconUrl": "https://brainbubble.atlassian.net/images/icons/priorities/major.png",
+      "id": "3"
+    },
+    "customfield_10001": null,
+    "customfield_10002": null,
+    "customfield_10200": null,
+    "customfield_10003": null,
+    "customfield_10004": null,
+    "labels": [],
+    "environment": null,
+    "aggregatetimeoriginalestimate": null,
+    "timeestimate": 144000,
+    "versions": [],
+    "duedate": null,
+    "progress": {
+      "total": 0,
+      "progress": 0
+    },
+    "votes": {
+      "hasVoted": false,
+      "self": "https://brainbubble.atlassian.net/rest/api/2/issue/FILTA-43/votes",
+      "votes": 0
+    },
+    "issuelinks": [],
+    "comment": {
+      "total": 1,
+      "comments": [{
+        "author": {
+          "emailAddress": "joseph.b.mccarthy2012@googlemail.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=48",
+            "24x24": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=24",
+            "16x16": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=16",
+            "32x32": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=32"
+          },
+          "displayName": "Joseph McCarthy",
+          "name": "joseph",
+          "self": "https://brainbubble.atlassian.net/rest/api/2/user?username=joseph",
+          "active": true
+        },
+        "created": "2013-10-09T22:14:54.979+0100",
+        "updateAuthor": {
+          "emailAddress": "joseph.b.mccarthy2012@googlemail.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=48",
+            "24x24": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=24",
+            "16x16": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=16",
+            "32x32": "https://secure.gravatar.com/avatar/a5a271f9eee8bbb3795f41f290274f8c?d=mm&s=32"
+          },
+          "displayName": "Joseph McCarthy",
+          "name": "joseph",
+          "self": "https://brainbubble.atlassian.net/rest/api/2/user?username=joseph",
+          "active": true
+        },
+        "self": "https://brainbubble.atlassian.net/rest/api/2/issue/10742/comment/10500",
+        "id": "10500",
+        "body": "&#116;&#104;&#105;&#115;&#32;&#105;&#115;&#32;&#110;&#111;&#116;&#32;&#114;&#101;&#97;&#108;&#108;&#121;&#32;&#97;&#115;&#115;&#105;&#103;&#110;&#101;&#100;&#32;&#116;&#111;&#32;&#109;&#101;&#44;&#32;&#106;&#117;&#115;&#116;&#32;&#116;&#101;&#115;&#116;&#105;&#110;&#103;&#32;&#111;&#117;&#116;&#32;&#116;&#104;&#101;&#32;&#105;&#110;&#116;&#101;&#108;&#108;&#105;&#106;&#32;&#45;&#32;&#106;&#105;&#114;&#97;&#32;&#112;&#108;&#117;&#103;&#105;&#110;&#32;&#58;&#41;",
+        "updated": "2013-10-09T22:24:55.956+0100"
+      }],
+      "maxResults": 1,
+      "startAt": 0
+    },
+    "worklog": {
+      "total": 0,
+      "maxResults": 20,
+      "startAt": 0,
+      "worklogs": []
+    },
+    "assignee": "johndoe",
+    "updated": "2013-10-09T22:24:55.961+0100",
+    "status": {
+      "name": "To Do",
+      "self": "https://brainbubble.atlassian.net/rest/api/2/status/10004",
+      "description": "Issue is currently in progress.",
+      "iconUrl": "https://brainbubble.atlassian.net/images/icons/statuses/open.png",
+      "id": "10004"
+    }
+  },
+  "key": "FILTA-43"
+}
