@@ -51,8 +51,6 @@ public class Comment extends Resource {
 
     private void deserialise(JSONObject json) {
 
-      //  Map map = json.toMap();
-    //	System.out.println("COMMENTS OBJ "+json.toString(2));
         self = Field.getString(json.optString("self",""));
         id = Field.getString(json.optString("id",""));
 

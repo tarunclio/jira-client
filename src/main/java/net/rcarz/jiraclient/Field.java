@@ -296,7 +296,7 @@ public final class Field {
         T result = null;
         JSONObject r =null;
         if(o == null)
-          r = new JSONObject("");
+          r = new JSONObject("{}");
         else if ( o instanceof String)
         	r = new JSONObject(o);
         else

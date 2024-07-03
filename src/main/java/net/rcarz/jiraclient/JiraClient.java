@@ -20,14 +20,18 @@
 package net.rcarz.jiraclient;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+//import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
  * A simple JIRA REST client.
@@ -36,13 +40,14 @@ public class JiraClient {
 
     private RestClient restclient = null;
     private String username = null;
-
+    private URI baseURI = null;
     /**
      * Creates a JIRA client.
      *
      * @param uri Base URI of the JIRA server
+     * @throws URISyntaxException 
      */
-    public JiraClient(String uri) {
+    public JiraClient(String uri)  {
         this(uri, null);
     }
 
@@ -51,15 +56,25 @@ public class JiraClient {
      *
      * @param uri Base URI of the JIRA server
      * @param creds Credentials to authenticate with
+     * @throws URISyntaxException 
      */
-    public JiraClient(String uri, ICredentials creds) {
-        DefaultHttpClient httpclient = new DefaultHttpClient();
-
+    public JiraClient(String uri, ICredentials creds)  {
+    	CloseableHttpClient httpclient = HttpClientBuilder.create().build();
+      //  DefaultHttpClient httpclient = new DefaultHttpClient();
+    	try {
+			this.baseURI = new URI(uri);
+			System.out.println("JIRACLIENT CONSTR "+uri+" OBJ "+this.baseURI);
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         restclient = new RestClient(httpclient, creds, URI.create(uri));
-
         if (creds != null)
             username = creds.getLogonName();
+        
+
         }
+
 
     /**
      * Creates a new issue in the given project.
@@ -344,22 +359,37 @@ public class JiraClient {
      * @throws JiraException failed to obtain the project list.
      */
     public List<Project> getProjects() throws JiraException {
-        try {
-            URI uri = restclient.buildURI(Resource.getBaseUri() + "project");
-            JSONObject response = restclient.get(uri);
+        
+    	List<Project> projects = null;
+           URI projectURI = null; 
+           Map<String, String> queryParams = new HashMap<String, String>()  ;
+           queryParams.put("maxResults", String.valueOf(2));
+
+          
+           // +" \n Response:"+response.toString(2));
+          
+            JSONObject response = null;
+            try {
+            	projectURI = restclient.buildURI(Resource.getBaseUri() + "project",queryParams);
+            	  System.out.println("PROJECTS uri "+projectURI.toString());
+            response = restclient.get(projectURI);
+            if(response.has("array")) {
+            	
+            
           //  JSONArray projectsArray = JSONArray.fromObject(response);
             //    TODO UNTESTED JSONArray prioritiesArray = JSONArray.fromObject(response);
-            JSONArray projectsArray = response.names();
-            List<Project> projects = new ArrayList<Project>(projectsArray.length());
+            JSONArray projectsArray = response.getJSONArray("array");
+            projects = new ArrayList<Project>(projectsArray.length());
             for (int i = 0; i < projectsArray.length(); i++) {
                 JSONObject p = projectsArray.getJSONObject(i);
                 projects.add(new Project(restclient, p));
             }
 
-            return projects;
-        } catch (Exception ex) {
+        }}
+        catch (Exception ex) {
             throw new JiraException(ex.getMessage(), ex);
         }
+			return projects;
     }
     
     /**

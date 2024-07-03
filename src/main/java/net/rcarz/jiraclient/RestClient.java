@@ -19,23 +19,16 @@
 
 package net.rcarz.jiraclient;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpHeaders;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
@@ -45,19 +38,32 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 /**
  * A simple REST client that speaks JSON.
  */
+
+@FunctionalInterface
+interface JsonProcessor {
+    boolean  isJsonArray(String jsonString) throws JSONException;
+}
+
+
 public class RestClient {
 
     private HttpClient httpClient = null;
     private ICredentials creds = null;
     private URI uri = null;
-
+ 
     /**
      * Creates a REST client instance with a URI.
      *
@@ -105,60 +111,69 @@ public class RestClient {
      * @throws URISyntaxException when the path is invalid
      */
     public URI buildURI(String path, Map<String, String> params) throws URISyntaxException {
-        URIBuilder ub = new URIBuilder(uri);
-        ub.setPath(ub.getPath() + path);
+        URIBuilder ub = new URIBuilder(uri.toString());
+        
+        System.out.println("BUILDURI "+ub.toString()+" path "+path+ " map is "+params);
+       
+        ub.setPath(path);
+        System.out.println("NOW URI "+ub.toString()+" path "+path+ " map is "+params);
 
         if (params != null) {
             for (Map.Entry<String, String> ent : params.entrySet())
                 ub.addParameter(ent.getKey(), ent.getValue());
         }
+        System.out.println("RETURNING "+ub.build().toString());
 
         return ub.build();
     }
 
     private JSONObject request(HttpRequestBase req) throws RestException, IOException {
-        req.addHeader("Accept", "application/json");
 
+        HttpResponse  resp = null;
+        JSONObject result =null;
+        System.out.println("SENDING REQ to uri "+req.getURI().toString());
+
+        StatusLine sl = null;
+        req.setHeader("Accept", "application/json");
+        try {
         if (creds != null)
             creds.authenticate(req);
 
-        HttpResponse resp = httpClient.execute(req);
+          resp = httpClient.execute(req);
         HttpEntity ent = resp.getEntity();
-        StringBuilder result = new StringBuilder();
-
+        
         if (ent != null) {
-            String encoding = null;
-            if (ent.getContentEncoding() != null) {
-            	encoding = ent.getContentEncoding().getValue();
-            }
-            
-            if (encoding == null) {
-    	        Header contentTypeHeader = resp.getFirstHeader("Content-Type");
-    	        HeaderElement[] contentTypeElements = contentTypeHeader.getElements();
-    	        for (HeaderElement he : contentTypeElements) {
-    	        	NameValuePair nvp = he.getParameterByName("charset");
-    	        	if (nvp != null) {
-    	        		encoding = nvp.getValue();
-    	        	}
-    	        }
-            }
-            
-            InputStreamReader isr =  encoding != null ?
-                new InputStreamReader(ent.getContent(), encoding) :
-                new InputStreamReader(ent.getContent());
-            BufferedReader br = new BufferedReader(isr);
-            String line = "";
+        	String str = EntityUtils.toString(ent,StandardCharsets.UTF_8);
+        	System.out.println("JSON STR "+str);
+        	
 
-            while ((line = br.readLine()) != null)
-                result.append(line);
+
+        sl = resp.getStatusLine();
+        
+    	Object  jsonValue = new JSONTokener(str).nextValue();
+        if (jsonValue instanceof JSONObject) {
+            // Handle it as a JSONObject
+           result = (JSONObject) jsonValue;
+           
+           
+        } else if (jsonValue instanceof JSONArray) {
+            // Handle it as a JSONArray
+            JSONArray jsonArray = (JSONArray) jsonValue;
+            result = new JSONObject("{}");
+            result.put("array", jsonArray);
         }
-
-        StatusLine sl = resp.getStatusLine();
-
+      //  System.out.println("RESULT "+result.toString(2));
+        } 
+        } catch (Exception e ) {
+        	System.out.println("WE HAVE TROUBLE "+e.getMessage());
+        	e.printStackTrace();
+        }
+        
         if (sl.getStatusCode() >= 300)
             throw new RestException(sl.getReasonPhrase(), sl.getStatusCode(), result.toString());
-
-        return result.length() > 0 ? new JSONObject(result.toString()): null;
+      
+        //return result.length() > 0 ? new JSONObject(result.toString()): null;
+        return result;
     }
 
     private JSONObject request(HttpEntityEnclosingRequestBase req, String payload)

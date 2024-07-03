@@ -41,18 +41,18 @@ public class IssueLink extends Resource {
     protected IssueLink(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json.toMap();
+        
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        type = Field.getResource(LinkType.class, map.get("type"), restclient);
-        outwardIssue = Field.getResource(Issue.class, map.get("outwardIssue"), restclient);
-        inwardIssue = Field.getResource(Issue.class, map.get("inwardIssue"), restclient);
+        self = json.optString("self");
+        id = json.optString("id");
+        type = Field.getResource(LinkType.class,json.optJSONObject("type"), restclient);
+        outwardIssue = Field.getResource(Issue.class, json.optJSONObject( "outwardIssue"), restclient);
+        inwardIssue = Field.getResource(Issue.class ,json.optJSONObject("inwardIssue"), restclient);
     }
 
     /**

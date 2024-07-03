@@ -50,28 +50,28 @@ public class Project extends Resource {
     protected Project(RestClient restclient, JSONObject json) {
         super(restclient);
 
-        if (json != null)
+        if (json != null && !json.isEmpty())
             deserialise(json);
     }
 
     private void deserialise(JSONObject json) {
-        Map map = json.toMap();
 
-        self = Field.getString(map.get("self"));
-        id = Field.getString(map.get("id"));
-        avatarUrls = Field.getMap(String.class, String.class, map.get("avatarUrls"));
-        key = Field.getString(map.get("key"));
-        name = Field.getString(map.get("name"));
+        self = json.optString("self");;
+        id = json.optString("id");
+        avatarUrls = Field.getMap(String.class, String.class, json.get("avatarUrls"));
+        key = json.optString("key");
+        name = json.optString("name");
         description = json.optString("description","");
         lead = Field.getResource(User.class,json.optJSONObject("lead",new JSONObject("{}")), restclient);
         assigneeType = json.optString("assigneeType","");
+   
         components = Field.getResourceArray(Component.class, json.optJSONArray("components", new JSONArray()), restclient);
         issueTypes = Field.getResourceArray(
             IssueType.class,
-            map.containsKey("issueTypes") ? map.get("issueTypes") : map.get("issuetypes"),
+            json.has("issueTypes") ? json.get("issueTypes") : json.optJSONArray("issuetypes"),
             restclient);
-        versions = Field.getResourceArray(Version.class, map.get("versions"), restclient);
-        roles = Field.getMap(String.class, String.class, map.get("roles"));
+        versions = Field.getResourceArray(Version.class, json.optJSONArray("versions"), restclient);
+        roles = Field.getMap(String.class, String.class, json.optJSONObject("roles"));
     }
 
     /**

@@ -407,31 +407,31 @@ public class Issue extends Resource {
 //        System.out.println("FIELDS MAP"+fields);
          JSONObject fieldsJson = json.getJSONObject("fields");
 
-        assignee = Field.getResource(User.class, fieldsJson.get(Field.ASSIGNEE), restclient);
+        assignee = Field.getResource(User.class, fieldsJson.optJSONObject(Field.ASSIGNEE), restclient);
         attachments = Field.getResourceArray(Attachment.class, fieldsJson.optJSONArray(Field.ATTACHMENT,new JSONArray()), restclient);
         comments = Field.getComments(fieldsJson.optJSONObject(Field.COMMENT), restclient);
-        components = Field.getResourceArray(Component.class, fieldsJson.get(Field.COMPONENTS), restclient);
+        components = Field.getResourceArray(Component.class, fieldsJson.optJSONObject(Field.COMPONENTS), restclient);
         description = Field.getString(fieldsJson.optString(Field.DESCRIPTION,""));
         dueDate = Field.getDate(fieldsJson.optString(Field.DUE_DATE,""));
-        fixVersions = Field.getResourceArray(Version.class, fieldsJson.getJSONArray(Field.FIX_VERSIONS), restclient);
-        issueLinks = Field.getResourceArray(IssueLink.class, fieldsJson.getJSONArray(Field.ISSUE_LINKS), restclient);
+        fixVersions = Field.getResourceArray(Version.class, fieldsJson.optJSONArray(Field.FIX_VERSIONS), restclient);
+        issueLinks = Field.getResourceArray(IssueLink.class, fieldsJson.optJSONArray(Field.ISSUE_LINKS), restclient);
         issueType = Field.getResource(IssueType.class, fieldsJson.optJSONObject(Field.ISSUE_TYPE), restclient);
-        labels = Field.getStringArray(fieldsJson.getJSONArray(Field.LABELS));
+        labels = Field.getStringArray(fieldsJson.optJSONArray(Field.LABELS));
        // parent = Field.getResource(Issue.class, fieldsJson.optJSONObject(Field.PARENT), restclient);
         parent = Field.getResource(Issue.class, fieldsJson.optJSONObject(Field.PARENT,new JSONObject("{}")), restclient);
         priority = Field.getResource(Priority.class, fieldsJson.optJSONObject(Field.PRIORITY), restclient);
-        project = Field.getResource(Project.class, fieldsJson.getJSONObject(Field.PROJECT), restclient);
+        project = Field.getResource(Project.class, fieldsJson.optJSONObject(Field.PROJECT), restclient);
         reporter = Field.getResource(User.class, fieldsJson.optJSONObject(Field.REPORTER), restclient);
         resolution = Field.getResource(Resolution.class, fieldsJson.optJSONObject(Field.RESOLUTION,new JSONObject("{}")), restclient);
         resolutionDate = Field.getDate(fieldsJson.optString(Field.RESOLUTION_DATE,""));
-        status = Field.getResource(Status.class, fieldsJson.getJSONObject(Field.STATUS), restclient);
-        subtasks = Field.getResourceArray(Issue.class, fieldsJson.getJSONArray(Field.SUBTASKS), restclient);
+        status = Field.getResource(Status.class, fieldsJson.optJSONObject(Field.STATUS), restclient);
+        subtasks = Field.getResourceArray(Issue.class, fieldsJson.optJSONArray(Field.SUBTASKS), restclient);
         summary = Field.getString(fieldsJson.optString(Field.SUMMARY,""));
-        timeTracking = Field.getTimeTracking(fieldsJson.getJSONObject(Field.TIME_TRACKING));
+        timeTracking = Field.getTimeTracking(fieldsJson.optJSONObject(Field.TIME_TRACKING));
 
-        versions = Field.getResourceArray(Version.class, fieldsJson.getJSONArray(Field.VERSIONS), restclient);
-        votes = Field.getResource(Votes.class, fieldsJson.getJSONObject(Field.VOTES), restclient);
-        watches = Field.getResource(Watches.class, fieldsJson.getJSONObject(Field.WATCHES), restclient);
+        versions = Field.getResourceArray(Version.class, fieldsJson.optJSONArray(Field.VERSIONS), restclient);
+        votes = Field.getResource(Votes.class, fieldsJson.optJSONObject(Field.VOTES), restclient);
+        watches = Field.getResource(Watches.class, fieldsJson.optJSONObject(Field.WATCHES), restclient);
         workLogs = Field.getWorkLogs(fieldsJson.optJSONArray(Field.WORKLOG,new JSONArray()), restclient);
 //        timeEstimate = Field.getInteger(fields.get(Field.TIME_ESTIMATE));
 //        timeSpent = Field.getInteger(fields.get(Field.TIME_SPENT));
@@ -899,6 +899,7 @@ public class Issue extends Resource {
 
             URI searchUri = restclient.buildURI(getBaseUri() + "search", queryParams);
             result = restclient.get(searchUri);
+
         } catch (Exception ex) {
             throw new JiraException("Failed to search issues", ex);
         }
@@ -908,12 +909,11 @@ public class Issue extends Resource {
         }
 
         SearchResult sr = new SearchResult();
-        Map map = (Map) result;
 
-        sr.start = Field.getInteger(map.get("startAt"));
-        sr.max = Field.getInteger(map.get("maxResults"));
-        sr.total = Field.getInteger(map.get("total"));
-        sr.issues = Field.getResourceArray(Issue.class, map.get("issues"), restclient);
+        sr.start = result.optInt("startAt");
+        sr.max = result.optInt("maxResults");
+        sr.total = result.optInt("total");
+        sr.issues = Field.getResourceArray(Issue.class,result.optJSONArray("issues"), restclient);
 
         return sr;
     }

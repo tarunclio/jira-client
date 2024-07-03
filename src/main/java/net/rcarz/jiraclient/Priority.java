@@ -52,7 +52,6 @@ public class Priority extends Resource {
         iconUrl =json.optString(("iconUrl"));
         name = json.optString(("name"));
         
-        System.out.println("PRIORITY OBJ"+this.toString());
     }
 
     /**
