@@ -54,373 +54,398 @@ import org.json.JSONTokener;
 
 @FunctionalInterface
 interface JsonProcessor {
-    boolean  isJsonArray(String jsonString) throws JSONException;
+	boolean isJsonArray(String jsonString) throws JSONException;
 }
-
 
 public class RestClient {
 
-    private HttpClient httpClient = null;
-    private ICredentials creds = null;
-    private URI uri = null;
- 
-    /**
-     * Creates a REST client instance with a URI.
-     *
-     * @param httpclient Underlying HTTP client to use
-     * @param uri Base URI of the remote REST service
-     */
-    public RestClient(HttpClient httpclient, URI uri) {
-        this(httpclient, null, uri);
-    }
+	private HttpClient httpClient = null;
+	private ICredentials creds = null;
+	private URI uri = null;
 
-    /**
-     * Creates an authenticated REST client instance with a URI.
-     *
-     * @param httpclient Underlying HTTP client to use
-     * @param creds Credentials to send with each request
-     * @param uri Base URI of the remote REST service
-     */
-    public RestClient(HttpClient httpclient, ICredentials creds, URI uri) {
-        this.httpClient = httpclient;
-        this.creds = creds;
-        this.uri = uri;
-    }
+	/**
+	 * Creates a REST client instance with a URI.
+	 *
+	 * @param httpclient Underlying HTTP client to use
+	 * @param uri        Base URI of the remote REST service
+	 */
+	public RestClient(HttpClient httpclient, URI uri) {
+		this(httpclient, null, uri);
+	}
 
-    /**
-     * Build a URI from a path.
-     *
-     * @param path Path to append to the base URI
-     *
-     * @return the full URI
-     *
-     * @throws URISyntaxException when the path is invalid
-     */
-    public URI buildURI(String path) throws URISyntaxException {
-        return buildURI(path, null);
-    }
+	/**
+	 * Creates an authenticated REST client instance with a URI.
+	 *
+	 * @param httpclient Underlying HTTP client to use
+	 * @param creds      Credentials to send with each request
+	 * @param uri        Base URI of the remote REST service
+	 */
+	public RestClient(HttpClient httpclient, ICredentials creds, URI uri) {
+		this.httpClient = httpclient;
+		this.creds = creds;
+		this.uri = uri;
+	}
 
-    /**
-     * Build a URI from a path and query parmeters.
-     *
-     * @param path Path to append to the base URI
-     * @param params Map of key value pairs
-     *
-     * @return the full URI
-     *
-     * @throws URISyntaxException when the path is invalid
-     */
-    public URI buildURI(String path, Map<String, String> params) throws URISyntaxException {
-        URIBuilder ub = new URIBuilder(uri.toString());
-        
-        System.out.println("BUILDURI "+ub.toString()+" path "+path+ " map is "+params);
-       
-        ub.setPath(path);
-        System.out.println("NOW URI "+ub.toString()+" path "+path+ " map is "+params);
+	/**
+	 * Build a URI from a path.
+	 *
+	 * @param path Path to append to the base URI
+	 *
+	 * @return the full URI
+	 *
+	 * @throws URISyntaxException when the path is invalid
+	 */
+	public URI buildURI(String path) throws URISyntaxException {
+		return buildURI(path, null);
+	}
 
-        if (params != null) {
-            for (Map.Entry<String, String> ent : params.entrySet())
-                ub.addParameter(ent.getKey(), ent.getValue());
-        }
-        System.out.println("RETURNING "+ub.build().toString());
+	/**
+	 * Build a URI from a path and query parmeters.
+	 *
+	 * @param path   Path to append to the base URI
+	 * @param params Map of key value pairs
+	 *
+	 * @return the full URI
+	 *
+	 * @throws URISyntaxException when the path is invalid
+	 */
+	public URI buildURI(String path, Map<String, String> params) throws URISyntaxException {
+		URIBuilder ub = new URIBuilder(uri.toString());
+		ub.setPath(path);
+		if (params != null) {
+			for (Map.Entry<String, String> ent : params.entrySet())
+				ub.addParameter(ent.getKey(), ent.getValue());
+		}
 
-        return ub.build();
-    }
+		return ub.build();
+	}
+	private JSONArray requestGetArray(HttpRequestBase req) throws RestException, IOException {
 
-    private JSONObject request(HttpRequestBase req) throws RestException, IOException {
+		HttpResponse resp = null;
+		JSONArray result = null;
+		StatusLine sl = null;
+		req.setHeader("Accept", "application/json");
+		try {
+			if (creds != null)
+				creds.authenticate(req);
 
-        HttpResponse  resp = null;
-        JSONObject result =null;
-        System.out.println("SENDING REQ to uri "+req.getURI().toString());
+			resp = httpClient.execute(req);
+			HttpEntity ent = resp.getEntity();
 
-        StatusLine sl = null;
-        req.setHeader("Accept", "application/json");
-        try {
-        if (creds != null)
-            creds.authenticate(req);
+			if (ent != null) {
+				String str = EntityUtils.toString(ent, StandardCharsets.UTF_8);
 
-          resp = httpClient.execute(req);
-        HttpEntity ent = resp.getEntity();
-        
-        if (ent != null) {
-        	String str = EntityUtils.toString(ent,StandardCharsets.UTF_8);
-        	System.out.println("JSON STR "+str);
-        	
+				sl = resp.getStatusLine();
+			//	System.out.println("RESPONSE "+str);
+				
+				result = new JSONArray(str);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
+		if (sl.getStatusCode() >= 300)
+			throw new RestException(sl.getReasonPhrase(), sl.getStatusCode(), result.toString());
 
-        sl = resp.getStatusLine();
-        
-    	Object  jsonValue = new JSONTokener(str).nextValue();
-        if (jsonValue instanceof JSONObject) {
-            // Handle it as a JSONObject
-           result = (JSONObject) jsonValue;
-           
-           
-        } else if (jsonValue instanceof JSONArray) {
-            // Handle it as a JSONArray
-            JSONArray jsonArray = (JSONArray) jsonValue;
-            result = new JSONObject("{}");
-            result.put("array", jsonArray);
-        }
-      //  System.out.println("RESULT "+result.toString(2));
-        } 
-        } catch (Exception e ) {
-        	System.out.println("WE HAVE TROUBLE "+e.getMessage());
-        	e.printStackTrace();
-        }
-        
-        if (sl.getStatusCode() >= 300)
-            throw new RestException(sl.getReasonPhrase(), sl.getStatusCode(), result.toString());
-      
-        //return result.length() > 0 ? new JSONObject(result.toString()): null;
-        return result;
-    }
+		return result;
+	}
+	private JSONObject request(HttpRequestBase req) throws RestException, IOException {
 
-    private JSONObject request(HttpEntityEnclosingRequestBase req, String payload)
-        throws RestException, IOException {
+		HttpResponse resp = null;
+		JSONObject result = null;
+		StatusLine sl = null;
+		req.setHeader("Accept", "application/json");
+		try {
+			if (creds != null)
+				creds.authenticate(req);
 
-        if (payload != null) {
-            StringEntity ent = null;
+			resp = httpClient.execute(req);
+			HttpEntity ent = resp.getEntity();
 
-            try {
-                ent = new StringEntity(payload, "UTF-8");
-                ent.setContentType("application/json");
-            } 
-            catch (Exception ex) {
-               /* utf-8 should always be supported... */
-            }
+			if (ent != null) {
+				String str = EntityUtils.toString(ent, StandardCharsets.UTF_8);
 
-            req.addHeader("Content-Type", "application/json");
-            req.setEntity(ent);
-        }
+				sl = resp.getStatusLine();
 
-        return request(req);
-    }
-    
-    private JSONObject request(HttpEntityEnclosingRequestBase req, File file)
-            throws RestException, IOException {
-            if (file != null) {
-            	File fileUpload = file;
-            	req.setHeader("X-Atlassian-Token","nocheck");
-            	MultipartEntity ent = new MultipartEntity();
-            	ent.addPart("file", new FileBody(fileUpload));
-            	req.setEntity(ent);
-            }
-            return request(req);
-        }
+				Object jsonValue = new JSONTokener(str).nextValue();
+				if (jsonValue instanceof JSONObject) {
+					// Handle it as a JSONObject
+					result = (JSONObject) jsonValue;
 
-    private JSONObject request(HttpEntityEnclosingRequestBase req, JSONObject payload)
-        throws RestException, IOException {
+				} else if (jsonValue instanceof JSONArray) {
+					// Handle it as a JSONArray
+					JSONArray jsonArray = (JSONArray) jsonValue;
+					result = new JSONObject("{}");
+					result.put("array", jsonArray);
+					System.out.println("ARRAY RESULT " + jsonArray.length());
 
-        return request(req, payload != null ? payload.toString() : null);
-    }
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-    /**
-     * Executes an HTTP DELETE with the given URI.
-     *
-     * @param uri Full URI of the remote endpoint
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     */
-    public JSONObject delete(URI uri) throws RestException, IOException {
-        return request(new HttpDelete(uri));
-    }
+		if (sl.getStatusCode() >= 300)
+			throw new RestException(sl.getReasonPhrase(), sl.getStatusCode(), result.toString());
 
-    /**
-     * Executes an HTTP DELETE with the given path.
-     *
-     * @param path Path to be appended to the URI supplied in the construtor
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     * @throws URISyntaxException when an error occurred appending the path to the URI
-     */
-    public JSONObject delete(String path) throws RestException, IOException, URISyntaxException {
-        return delete(buildURI(path));
-    }
+		return result;
+	}
 
-    /**
-     * Executes an HTTP GET with the given URI.
-     *
-     * @param uri Full URI of the remote endpoint
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     */
-    public JSONObject get(URI uri) throws RestException, IOException {
-        return request(new HttpGet(uri));
-    }
+	private JSONObject request(HttpEntityEnclosingRequestBase req, String payload) throws RestException, IOException {
 
-    /**
-     * Executes an HTTP GET with the given path.
-     *
-     * @param path Path to be appended to the URI supplied in the construtor
-     * @param params Map of key value pairs
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     * @throws URISyntaxException when an error occurred appending the path to the URI
-     */
-    public JSONObject get(String path, Map<String, String> params) throws RestException, IOException, URISyntaxException {
-        return get(buildURI(path, params));
-    }
+		if (payload != null) {
+			StringEntity ent = null;
 
-    /**
-     * Executes an HTTP GET with the given path.
-     *
-     * @param path Path to be appended to the URI supplied in the construtor
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     * @throws URISyntaxException when an error occurred appending the path to the URI
-     */
-    public JSONObject get(String path) throws RestException, IOException, URISyntaxException {
-        return get(path, null);
-    }
+			try {
+				ent = new StringEntity(payload, "UTF-8");
+				ent.setContentType("application/json");
+			} catch (Exception ex) {
+				/* utf-8 should always be supported... */
+			}
 
+			req.addHeader("Content-Type", "application/json");
+			req.setEntity(ent);
+		}
 
-    /**
-     * Executes an HTTP POST with the given URI and payload.
-     *
-     * @param uri Full URI of the remote endpoint
-     * @param payload JSON-encoded data to send to the remote service
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     */
-    public JSONObject post(URI uri, JSONObject payload) throws RestException, IOException {
-        return request(new HttpPost(uri), payload);
-    }
+		return request(req);
+	}
 
-    /**
-     * Executes an HTTP POST with the given URI and payload.
-     *
-     * At least one JIRA REST endpoint expects malformed JSON. The payload
-     * argument is quoted and sent to the server with the application/json
-     * Content-Type header. You should not use this function when proper JSON
-     * is expected.
-     *
-     * @see https://jira.atlassian.com/browse/JRA-29304
-     *
-     * @param uri Full URI of the remote endpoint
-     * @param payload Raw string to send to the remote service
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     */
-    public JSONObject post(URI uri, String payload) throws RestException, IOException {
-    	String quoted = null;
-    	if(payload != null && !payload.equals(new JSONObject())){
-    		quoted = String.format("\"%s\"", payload);
-    	}
-        return request(new HttpPost(uri), quoted);
-    }
+	private JSONObject request(HttpEntityEnclosingRequestBase req, File file) throws RestException, IOException {
+		if (file != null) {
+			File fileUpload = file;
+			req.setHeader("X-Atlassian-Token", "nocheck");
+			MultipartEntity ent = new MultipartEntity();
+			ent.addPart("file", new FileBody(fileUpload));
+			req.setEntity(ent);
+		}
+		return request(req);
+	}
 
-    /**
-     * Executes an HTTP POST with the given path and payload.
-     *
-     * @param path Path to be appended to the URI supplied in the construtor
-     * @param payload JSON-encoded data to send to the remote service
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     * @throws URISyntaxException when an error occurred appending the path to the URI
-     */
-    public JSONObject post(String path, JSONObject payload)
-        throws RestException, IOException, URISyntaxException {
+	private JSONObject request(HttpEntityEnclosingRequestBase req, JSONObject payload)
+			throws RestException, IOException {
 
-        return post(buildURI(path), payload);
-    }
-    
-    /**
-     * Executes an HTTP POST with the given path.
-     *
-     * @param path Path to be appended to the URI supplied in the construtor
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     * @throws URISyntaxException when an error occurred appending the path to the URI
-     */
-    public JSONObject post(String path)
-        throws RestException, IOException, URISyntaxException {
-    	
-        return post(buildURI(path), new JSONObject());
-    }
-    
-    /**
-     * Executes an HTTP POST with the given path and file payload.
-     * 
-     * @param uri Full URI of the remote endpoint
-     * @param file java.io.File
-     * 
-     * @throws URISyntaxException 
-     * @throws IOException 
-     * @throws RestException 
-     */
-    public JSONObject post(String path, File file) throws RestException, IOException, URISyntaxException{
-        return request(new HttpPost(buildURI(path)), file);
-    }
+		return request(req, payload != null ? payload.toString() : null);
+	}
 
-    /**
-     * Executes an HTTP PUT with the given URI and payload.
-     *
-     * @param uri Full URI of the remote endpoint
-     * @param payload JSON-encoded data to send to the remote service
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     */
-    public JSONObject put(URI uri, JSONObject payload) throws RestException, IOException {
-        return request(new HttpPut(uri), payload);
-    }
+	/**
+	 * Executes an HTTP DELETE with the given URI.
+	 *
+	 * @param uri Full URI of the remote endpoint
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException when an HTTP-level error occurs
+	 * @throws IOException   when an error reading the response occurs
+	 */
+	public JSONObject delete(URI uri) throws RestException, IOException {
+		return request(new HttpDelete(uri));
+	}
 
-    /**
-     * Executes an HTTP PUT with the given path and payload.
-     *
-     * @param path Path to be appended to the URI supplied in the construtor
-     * @param payload JSON-encoded data to send to the remote service
-     *
-     * @return JSON-encoded result or null when there's no content returned
-     *
-     * @throws RestException when an HTTP-level error occurs
-     * @throws IOException when an error reading the response occurs
-     * @throws URISyntaxException when an error occurred appending the path to the URI
-     */
+	/**
+	 * Executes an HTTP DELETE with the given path.
+	 *
+	 * @param path Path to be appended to the URI supplied in the construtor
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException      when an HTTP-level error occurs
+	 * @throws IOException        when an error reading the response occurs
+	 * @throws URISyntaxException when an error occurred appending the path to the
+	 *                            URI
+	 */
+	public JSONObject delete(String path) throws RestException, IOException, URISyntaxException {
+		return delete(buildURI(path));
+	}
 
-    public JSONObject put(String path, JSONObject payload)
-        throws RestException, IOException, URISyntaxException {
+	/**
+	 * Executes an HTTP GET with the given URI.
+	 *
+	 * @param uri Full URI of the remote endpoint
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException when an HTTP-level error occurs
+	 * @throws IOException   when an error reading the response occurs
+	 */
+	public JSONObject get(URI uri) throws RestException, IOException {
+		return request(new HttpGet(uri));
+	}
+	/**
+	 * Executes an HTTP GET with the given URI.
+	 *
+	 * @param uri Full URI of the remote endpoint
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException when an HTTP-level error occurs
+	 * @throws IOException   when an error reading the response occurs
+	 */
+	public JSONArray getJsonArray(URI uri) throws RestException, IOException {
+		return requestGetArray(new HttpGet(uri));
+	}
+	/**
+	 * Executes an HTTP GET with the given path.
+	 *
+	 * @param path   Path to be appended to the URI supplied in the construtor
+	 * @param params Map of key value pairs
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException      when an HTTP-level error occurs
+	 * @throws IOException        when an error reading the response occurs
+	 * @throws URISyntaxException when an error occurred appending the path to the
+	 *                            URI
+	 */
+	public JSONObject get(String path, Map<String, String> params)
+			throws RestException, IOException, URISyntaxException {
+		return get(buildURI(path, params));
+	}
 
-        return put(buildURI(path), payload);
-    }
-    
-    /**
-     * Exposes the http client.
-     *
-     * @return the httpClient property
-     */
-    public HttpClient getHttpClient(){
-        return this.httpClient;
-    }
+	/**
+	 * Executes an HTTP GET with the given path.
+	 *
+	 * @param path Path to be appended to the URI supplied in the construtor
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException      when an HTTP-level error occurs
+	 * @throws IOException        when an error reading the response occurs
+	 * @throws URISyntaxException when an error occurred appending the path to the
+	 *                            URI
+	 */
+	public JSONObject get(String path) throws RestException, IOException, URISyntaxException {
+		return get(path, null);
+	}
+
+	/**
+	 * Executes an HTTP POST with the given URI and payload.
+	 *
+	 * @param uri     Full URI of the remote endpoint
+	 * @param payload JSON-encoded data to send to the remote service
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException when an HTTP-level error occurs
+	 * @throws IOException   when an error reading the response occurs
+	 */
+	public JSONObject post(URI uri, JSONObject payload) throws RestException, IOException {
+		return request(new HttpPost(uri), payload);
+	}
+
+	/**
+	 * Executes an HTTP POST with the given URI and payload.
+	 *
+	 * At least one JIRA REST endpoint expects malformed JSON. The payload argument
+	 * is quoted and sent to the server with the application/json Content-Type
+	 * header. You should not use this function when proper JSON is expected.
+	 *
+	 * @see https://jira.atlassian.com/browse/JRA-29304
+	 *
+	 * @param uri     Full URI of the remote endpoint
+	 * @param payload Raw string to send to the remote service
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException when an HTTP-level error occurs
+	 * @throws IOException   when an error reading the response occurs
+	 */
+	public JSONObject post(URI uri, String payload) throws RestException, IOException {
+		String quoted = null;
+		if (payload != null && !payload.equals(new JSONObject())) {
+			quoted = String.format("\"%s\"", payload);
+		}
+		return request(new HttpPost(uri), quoted);
+	}
+
+	/**
+	 * Executes an HTTP POST with the given path and payload.
+	 *
+	 * @param path    Path to be appended to the URI supplied in the construtor
+	 * @param payload JSON-encoded data to send to the remote service
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException      when an HTTP-level error occurs
+	 * @throws IOException        when an error reading the response occurs
+	 * @throws URISyntaxException when an error occurred appending the path to the
+	 *                            URI
+	 */
+	public JSONObject post(String path, JSONObject payload) throws RestException, IOException, URISyntaxException {
+
+		return post(buildURI(path), payload);
+	}
+
+	/**
+	 * Executes an HTTP POST with the given path.
+	 *
+	 * @param path Path to be appended to the URI supplied in the construtor
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException      when an HTTP-level error occurs
+	 * @throws IOException        when an error reading the response occurs
+	 * @throws URISyntaxException when an error occurred appending the path to the
+	 *                            URI
+	 */
+	public JSONObject post(String path) throws RestException, IOException, URISyntaxException {
+
+		return post(buildURI(path), new JSONObject());
+	}
+
+	/**
+	 * Executes an HTTP POST with the given path and file payload.
+	 * 
+	 * @param uri  Full URI of the remote endpoint
+	 * @param file java.io.File
+	 * 
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 * @throws RestException
+	 */
+	public JSONObject post(String path, File file) throws RestException, IOException, URISyntaxException {
+		return request(new HttpPost(buildURI(path)), file);
+	}
+
+	/**
+	 * Executes an HTTP PUT with the given URI and payload.
+	 *
+	 * @param uri     Full URI of the remote endpoint
+	 * @param payload JSON-encoded data to send to the remote service
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException when an HTTP-level error occurs
+	 * @throws IOException   when an error reading the response occurs
+	 */
+	public JSONObject put(URI uri, JSONObject payload) throws RestException, IOException {
+		return request(new HttpPut(uri), payload);
+	}
+
+	/**
+	 * Executes an HTTP PUT with the given path and payload.
+	 *
+	 * @param path    Path to be appended to the URI supplied in the construtor
+	 * @param payload JSON-encoded data to send to the remote service
+	 *
+	 * @return JSON-encoded result or null when there's no content returned
+	 *
+	 * @throws RestException      when an HTTP-level error occurs
+	 * @throws IOException        when an error reading the response occurs
+	 * @throws URISyntaxException when an error occurred appending the path to the
+	 *                            URI
+	 */
+
+	public JSONObject put(String path, JSONObject payload) throws RestException, IOException, URISyntaxException {
+
+		return put(buildURI(path), payload);
+	}
+
+	/**
+	 * Exposes the http client.
+	 *
+	 * @return the httpClient property
+	 */
+	public HttpClient getHttpClient() {
+		return this.httpClient;
+	}
 }
-

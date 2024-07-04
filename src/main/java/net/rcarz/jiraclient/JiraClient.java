@@ -25,13 +25,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
-import org.json.JSONException;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.apache.http.impl.client.CloseableHttpClient;
 //import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+
 
 /**
  * A simple JIRA REST client.
@@ -60,10 +63,8 @@ public class JiraClient {
      */
     public JiraClient(String uri, ICredentials creds)  {
     	CloseableHttpClient httpclient = HttpClientBuilder.create().build();
-      //  DefaultHttpClient httpclient = new DefaultHttpClient();
     	try {
 			this.baseURI = new URI(uri);
-			System.out.println("JIRACLIENT CONSTR "+uri+" OBJ "+this.baseURI);
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -286,9 +287,9 @@ public class JiraClient {
     public List<Priority> getPriorities() throws JiraException {
         try {
             URI uri = restclient.buildURI(Resource.getBaseUri() + "priority");
-            JSONObject response = restclient.get(uri);
+           
        //    TODO UNTESTED JSONArray prioritiesArray = JSONArray.fromObject(response);
-            JSONArray prioritiesArray = response.names();
+            JSONArray prioritiesArray = restclient.getJsonArray(uri);
             List<Priority> priorities = new ArrayList<Priority>(prioritiesArray.length());
             for (int i = 0; i < prioritiesArray.length(); i++) {
                 JSONObject p = prioritiesArray.getJSONObject(i);
@@ -361,35 +362,32 @@ public class JiraClient {
     public List<Project> getProjects() throws JiraException {
         
     	List<Project> projects = null;
-           URI projectURI = null; 
-           Map<String, String> queryParams = new HashMap<String, String>()  ;
-           queryParams.put("maxResults", String.valueOf(2));
+    	URI projectURI = null; 
+    	Map<String, String> queryParams = new HashMap<String, String>()  ;
+    	queryParams.put("maxResults", String.valueOf(10));
 
-          
-           // +" \n Response:"+response.toString(2));
-          
-            JSONObject response = null;
-            try {
-            	projectURI = restclient.buildURI(Resource.getBaseUri() + "project",queryParams);
-            	  System.out.println("PROJECTS uri "+projectURI.toString());
-            response = restclient.get(projectURI);
-            if(response.has("array")) {
-            	
-            
-          //  JSONArray projectsArray = JSONArray.fromObject(response);
-            //    TODO UNTESTED JSONArray prioritiesArray = JSONArray.fromObject(response);
-            JSONArray projectsArray = response.getJSONArray("array");
-            projects = new ArrayList<Project>(projectsArray.length());
-            for (int i = 0; i < projectsArray.length(); i++) {
-                JSONObject p = projectsArray.getJSONObject(i);
-                projects.add(new Project(restclient, p));
-            }
 
-        }}
-        catch (Exception ex) {
-            throw new JiraException(ex.getMessage(), ex);
-        }
-			return projects;
+    	// +" \n Response:"+response.toString(2));
+
+    	JSONArray projectsArray  = null;
+    	try {
+    		projectURI = restclient.buildURI(Resource.getBaseUri() + "project",queryParams);
+    		projectsArray = restclient.getJsonArray(projectURI);
+
+
+    		//  JSONArray projectsArray = JSONArray.fromObject(response);
+    		//    TODO UNTESTED JSONArray prioritiesArray = JSONArray.fromObject(response);
+    		projects = new ArrayList<Project>(projectsArray.length());
+    		for (int i = 0; i < projectsArray.length(); i++) {
+    			JSONObject p = projectsArray.getJSONObject(i);
+    			projects.add(new Project(restclient, p));
+    		}
+
+    	}
+    	catch (Exception ex) {
+    		throw new JiraException(ex.getMessage(), ex);
+    	}
+    	return projects;
     }
     
     /**
@@ -416,10 +414,8 @@ public class JiraClient {
     public List<IssueType> getIssueTypes() throws JiraException {
         try {
             URI uri = restclient.buildURI(Resource.getBaseUri() + "issuetype");
-            JSONObject response = restclient.get(uri);
-         //   JSONArray issueTypeArray = JSONArray.fromObject(response);
-            //    TODO UNTESTED JSONArray prioritiesArray = JSONArray.fromObject(response);
-            JSONArray issueTypeArray = response.names();
+            //    TODO UNTESTED 
+            JSONArray issueTypeArray = restclient.getJsonArray(uri);
             List<IssueType> issueTypes = new ArrayList<IssueType>(issueTypeArray.length());
             for (int i = 0; i < issueTypeArray.length(); i++) {
                 JSONObject it = issueTypeArray.getJSONObject(i);
@@ -455,4 +451,17 @@ public class JiraClient {
     public Component getComponent(String id) throws JiraException {
         return Component.get(restclient, id);
     }
+    /**
+     * Obtains a JSONArray which would be wrapped in the param json 
+     * 
+     * @param json The json object
+     * 
+     * @return the JSONArray object. Null otherwise
+     * 
+     * @throws JiraException failed to obtain the component
+     */
+ 
+
+       
+    
 }
